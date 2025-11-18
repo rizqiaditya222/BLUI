@@ -56,7 +56,6 @@ fun DatePickerField(
                 .padding(bottom = 8.dp)
         )
 
-        // TextField (Read-only, clickable)
         OutlinedTextField(
             value = value,
             onValueChange = { },
@@ -117,7 +116,7 @@ fun DatePickerField(
             DatePicker(
                 state = datePickerState,
                 colors = DatePickerDefaults.colors(
-                    containerColor = Color(0xFFFFFFFF) // Pure white background untuk calendar
+                    containerColor = Color(0xFFFFFFFF)
                 )
             )
         }

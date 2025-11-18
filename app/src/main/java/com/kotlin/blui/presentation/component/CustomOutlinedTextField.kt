@@ -20,7 +20,7 @@ fun CustomOutlinedTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    leadingIcon: ImageVector,
+    leadingIcon: ImageVector? = null,
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -37,13 +37,15 @@ fun CustomOutlinedTextField(
                 color = Color.LightGray
             )
         },
-        leadingIcon = {
-            Icon(
-                imageVector = leadingIcon,
-                contentDescription = "$placeholder Icon",
-                tint = Color.LightGray
-            )
-        },
+        leadingIcon = if (leadingIcon != null) {
+            {
+                Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = "$placeholder Icon",
+                    tint = Color.LightGray
+                )
+            }
+        } else null,
         trailingIcon = trailingIcon,
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType
@@ -59,4 +61,3 @@ fun CustomOutlinedTextField(
         )
     )
 }
-
