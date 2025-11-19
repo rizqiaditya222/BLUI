@@ -8,16 +8,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-/**
- * ApiConfig - Singleton object untuk konfigurasi Retrofit
- * Menyediakan instance ApiService yang siap digunakan
- */
 object ApiConfig {
 
-    // TODO: Ganti dengan URL backend Anda
-    private const val BASE_URL = "https://your-api-url.com/api/"
+    private const val BASE_URL = "https://blui.elginbrian.com/"
 
-    // Timeout configuration
     private const val CONNECT_TIMEOUT = 30L
     private const val READ_TIMEOUT = 30L
     private const val WRITE_TIMEOUT = 30L
@@ -85,10 +79,6 @@ object ApiConfig {
         return retrofit.create(ApiService::class.java)
     }
 
-    /**
-     * Alternatif: Membuat ApiService dengan TokenManager yang sudah ada
-     * Berguna jika TokenManager sudah di-inject via DI (Dagger/Hilt)
-     */
     fun getApiService(tokenManager: TokenManager): ApiService {
         val okHttpClient = provideOkHttpClient(tokenManager)
         val retrofit = provideRetrofit(okHttpClient)

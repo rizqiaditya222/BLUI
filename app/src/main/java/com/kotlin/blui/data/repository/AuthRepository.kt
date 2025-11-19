@@ -14,15 +14,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
-/**
- * AuthRepository - Handle autentikasi dan profil user
- *
- * Contoh penggunaan:
- * ```
- * val authRepository = AuthRepository(context)
- * val result = authRepository.login("email@example.com", "password")
- * ```
- */
+
 class AuthRepository(private val context: Context) {
 
     private val apiService: ApiService = ApiConfig.getApiService(context)
@@ -42,7 +34,6 @@ class AuthRepository(private val context: Context) {
             val request = RegisterRequest(fullName, email, password, dateOfBirth)
             val response = apiService.register(request)
 
-            // Simpan token dan userId setelah register sukses
             tokenManager.saveToken(response.token)
             tokenManager.saveUserId(response.user.id)
 
