@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,9 +19,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Note
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -44,15 +44,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kotlin.blui.presentation.component.CategoryData
+import com.kotlin.blui.presentation.component.CategoryPickerDialog
 import com.kotlin.blui.presentation.component.CustomOutlinedTextField
-import com.kotlin.blui.ui.theme.BlueLight
-import com.kotlin.blui.ui.theme.BlueLightActive
+import com.kotlin.blui.presentation.component.DeleteButton
+import com.kotlin.blui.presentation.component.TransactionTypeToggle
 import com.kotlin.blui.ui.theme.BluiTheme
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -62,21 +64,35 @@ import java.util.Locale
 @Composable
 fun TransactionScreen(
     modifier: Modifier = Modifier,
-    isEditMode: Boolean = false,
-    initialTransactionType: String = "Expense",
+    isEditMode: Boolean = true,
+    initialTransactionType: String = "Income",
     onBack: () -> Unit = {},
     onSave: () -> Unit = {},
-    onDelete: () -> Unit = {}
+    onDelete: () -> Unit = {},
+    onAddCategory: () -> Unit = {}
 ) {
     var transactionType by remember { mutableStateOf(initialTransactionType) }
     var name by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
+    var selectedCategoryIcon by remember { mutableStateOf(Icons.Default.Restaurant) }
+    var selectedCategoryColor by remember { mutableStateOf(Color(0xFFFF6B6B)) }
     var date by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showCategoryPicker by remember { mutableStateOf(false) }
+    var categoryDeleteMode by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    // Dynamic title based on mode and transaction type
+    // Sample categories
+    val categories = remember {
+        listOf(
+            CategoryData("1", "Makanan & Minuman", Icons.Default.Restaurant, Color(0xFF4ECAF6)),
+            CategoryData("2", "Transportasi", Icons.Default.DirectionsCar, Color(0xFFFF9CAC)),
+            CategoryData("3", "Belanja", Icons.Default.ShoppingCart, Color(0xFFFFC658)),
+            CategoryData("4", "Kopi", Icons.Default.LocalCafe, Color(0xFF4CAF50))
+        )
+    }
+
     val title = if (isEditMode) {
         "Edit ${if (transactionType == "Expense") "Expense" else "Income"}"
     } else {
@@ -122,89 +138,10 @@ fun TransactionScreen(
 
             // Only show toggle when NOT in edit mode
             if (!isEditMode) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(color = BlueLight)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(36.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(
-                                    if (transactionType == "Expense") {
-                                        Brush.horizontalGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.primary,
-                                                BlueLightActive
-                                            )
-                                        )
-                                    } else {
-                                        Brush.horizontalGradient(
-                                            colors = listOf(
-                                                Color.Transparent,
-                                                Color.Transparent
-                                            )
-                                        )
-                                    }
-                                )
-                                .clickable { transactionType = "Expense" },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Expense ↑",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (transactionType == "Expense") Color.White else MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        // Income Button
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(
-                                    if (transactionType == "Income") {
-                                        Brush.horizontalGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.primary,
-                                                BlueLightActive
-                                            )
-                                        )
-                                    } else {
-                                        Brush.horizontalGradient(
-                                            colors = listOf(
-                                                Color.Transparent,
-                                                Color.Transparent
-                                            )
-                                        )
-                                    }
-                                )
-                                .clickable { transactionType = "Income" },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Income ↓",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (transactionType == "Income") Color.White else MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
+                TransactionTypeToggle(
+                    selectedType = transactionType,
+                    onTypeSelected = { transactionType = it }
+                )
 
                 Spacer(modifier = Modifier.height(32.dp))
             }
@@ -243,22 +180,25 @@ fun TransactionScreen(
                 ) {
                     CustomOutlinedTextField(
                         value = category,
-                        onValueChange = { category = it },
+                        onValueChange = { },
                         placeholder = "",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        readOnly = true
                     )
 
-                    // Category Icon Button
                     Box(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFFF6B6B))
-                            .clickable { /* TODO: Open category picker */ },
+                            .background(selectedCategoryColor)
+                            .clickable {
+                                showCategoryPicker = true
+                                categoryDeleteMode = false
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Restaurant,
+                            imageVector = selectedCategoryIcon,
                             contentDescription = "Category Icon",
                             tint = Color.White,
                             modifier = Modifier.size(18.dp)
@@ -345,30 +285,11 @@ fun TransactionScreen(
 
             // Only show delete button when in edit mode
             if (isEditMode) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(120.dp)
-                            .height(42.dp)
-                            .clip(RoundedCornerShape(32.dp))
-                            .background(color = BlueLight)
-                            .clickable { onDelete() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Hapus",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                DeleteButton(onClick = onDelete, text ="Hapus")
             }
         }
 
+        // Date Picker Dialog
         if (showDatePicker) {
             DatePickerDialog(
                 onDismissRequest = { showDatePicker = false },
@@ -387,7 +308,10 @@ fun TransactionScreen(
                     TextButton(onClick = { showDatePicker = false }) {
                         Text("Batal", color = MaterialTheme.colorScheme.primary)
                     }
-                }
+                },
+                colors = androidx.compose.material3.DatePickerDefaults.colors(
+                    containerColor = Color.White
+                )
             ) {
                 DatePicker(
                     state = datePickerState,
@@ -397,6 +321,35 @@ fun TransactionScreen(
                 )
             }
         }
+
+        // Category Picker Dialog
+        CategoryPickerDialog(
+            show = showCategoryPicker,
+            categories = categories,
+            deleteMode = categoryDeleteMode,
+            onDismiss = {
+                showCategoryPicker = false
+                categoryDeleteMode = false
+            },
+            onCategorySelected = { selectedCategory ->
+                category = selectedCategory.name
+                selectedCategoryIcon = selectedCategory.icon
+                selectedCategoryColor = selectedCategory.color
+                showCategoryPicker = false
+                categoryDeleteMode = false
+            },
+            onAddCategory = {
+                showCategoryPicker = false
+                onAddCategory()
+            },
+            onDeleteCategory = { categoryId ->
+                // TODO: Handle delete category
+                println("Delete category: $categoryId")
+            },
+            onToggleDeleteMode = {
+                categoryDeleteMode = !categoryDeleteMode
+            }
+        )
     }
 }
 

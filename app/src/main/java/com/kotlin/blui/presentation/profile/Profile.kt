@@ -1,11 +1,10 @@
-package com.kotlin.blui.presentation.auth.register
+package com.kotlin.blui.presentation.profile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -13,19 +12,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person2
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,39 +30,57 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.kotlin.blui.R
 import com.kotlin.blui.R.drawable
 import com.kotlin.blui.presentation.component.DatePickerField
+import com.kotlin.blui.presentation.component.DeleteButton
 import com.kotlin.blui.presentation.component.FormField
-import com.kotlin.blui.presentation.component.PrimaryButton
+import com.kotlin.blui.presentation.component.ProfileImage
 import com.kotlin.blui.ui.theme.BluiTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(
-    onRegisterClick: (name: String, email: String, dateOfBirth: String, password: String) -> Unit = { _, _, _, _ -> },
-    onLoginClick: () -> Unit = {}
+fun ProfileScreen(
+
+
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var dateOfBirth by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
+    var isEditMode by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { },
+                colors = androidx.compose.material3.TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent
+                ),
+                actions = {
+                    Text(
+                        if (isEditMode) "Simpan" else "Edit",
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(end = 24.dp)
+                            .clickable {
+                                isEditMode = !isEditMode
+                                // TODO: Simpan data jika isEditMode berubah dari true ke false
+                            }
+                    )
+                }
+            )
+        }
     ) { paddingValues ->
         val layoutDirection = LocalLayoutDirection.current
 
@@ -79,7 +91,6 @@ fun RegisterScreen(
                     start = paddingValues.calculateStartPadding(layoutDirection),
                     end = paddingValues.calculateEndPadding(layoutDirection),
                     bottom = paddingValues.calculateBottomPadding()
-                    // top padding intentionally omitted
                 )
         ) {
             Image(
@@ -95,18 +106,17 @@ fun RegisterScreen(
                     .fillMaxSize()
                     .verticalScroll(scrollState)
                     .padding(horizontal = 24.dp)
-                    .padding(top = 48.dp, bottom = 24.dp),
+                    .padding(top = 12.dp, bottom = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Header
-                Text(
-                    text = "Register",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 32.sp
-                )
+                Box(
+                    modifier = Modifier.clickable(enabled = isEditMode) {
+                        // TODO: Handle image selection from gallery
+                    }
+                ) {
+                    ProfileImage()
+                }
 
                 Spacer(modifier = Modifier.height(48.dp))
 
@@ -114,7 +124,7 @@ fun RegisterScreen(
                 FormField(
                     label = "Nama Lengkap",
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { if (isEditMode) name = it },
                     placeholder = "Masukkan nama lengkap",
                     leadingIcon = Icons.Default.Person2,
                     keyboardType = KeyboardType.Text,
@@ -129,7 +139,7 @@ fun RegisterScreen(
                 FormField(
                     label = "Email",
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = { if (isEditMode) email = it },
                     placeholder = "Masukkan email",
                     leadingIcon = Icons.Default.Email,
                     keyboardType = KeyboardType.Email,
@@ -146,30 +156,7 @@ fun RegisterScreen(
                     value = dateOfBirth,
                     onValueChange = { dateOfBirth = it },
                     placeholder = "Pilih tanggal lahir",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .widthIn(max = 600.dp)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Password Form Field
-                FormField(
-                    label = "Password",
-                    value = password,
-                    onValueChange = { password = it },
-                    placeholder = "Masukkan password",
-                    leadingIcon = Icons.Default.Lock,
-                    keyboardType = KeyboardType.Password,
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(
-                                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = if (passwordVisible) "Hide password" else "Show password"
-                            )
-                        }
-                    },
+                    readOnly = !isEditMode,
                     modifier = Modifier
                         .fillMaxWidth()
                         .widthIn(max = 600.dp)
@@ -177,28 +164,11 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Register Button
-                PrimaryButton(
-                    text = "Register",
-                    onClick = { onRegisterClick(name, email, dateOfBirth, password) },
-                    modifier = Modifier.widthIn(max = 600.dp)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Login Link
-                Row(modifier = Modifier.padding(top = 8.dp)) {
-                    Text(
-                        text = "Sudah punya akun? ",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = "Login",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.clickable { onLoginClick() }
+                // Sign Out button - only shown when not in edit mode
+                if (!isEditMode) {
+                    DeleteButton(
+                        onClick = { /* Handle sign out */ },
+                        text = "Sign Out"
                     )
                 }
 
@@ -209,8 +179,8 @@ fun RegisterScreen(
 
 @Preview
 @Composable
-fun RegisterScreenPreview() {
+fun RegisterProfilePreview() {
     BluiTheme {
-        RegisterScreen()
+        ProfileScreen()
     }
 }

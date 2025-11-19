@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            BluiTheme {
+            BluiTheme(darkTheme = false) {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {

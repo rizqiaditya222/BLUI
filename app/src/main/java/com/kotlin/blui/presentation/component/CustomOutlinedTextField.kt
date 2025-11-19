@@ -25,7 +25,9 @@ fun CustomOutlinedTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailingIcon: @Composable (() -> Unit)? = null,
-    singleLine: Boolean = true
+    singleLine: Boolean = true,
+    readOnly: Boolean = false,
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
         value = value,
@@ -52,12 +54,20 @@ fun CustomOutlinedTextField(
         ),
         visualTransformation = visualTransformation,
         singleLine = singleLine,
+        readOnly = readOnly,
+        enabled = enabled,
         shape = RoundedCornerShape(8.dp),
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedBorderColor = Color.LightGray,
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedLeadingIconColor = Color.LightGray,
-            focusedLeadingIconColor = MaterialTheme.colorScheme.primary
+            focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+            focusedContainerColor = MaterialTheme.colorScheme.background,
+            disabledContainerColor = MaterialTheme.colorScheme.background,
+            disabledBorderColor = Color.LightGray,
+            disabledLeadingIconColor = Color.LightGray,
+            disabledTextColor = MaterialTheme.colorScheme.onSurface
         )
     )
 }

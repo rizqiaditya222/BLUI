@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerColors
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,7 +38,8 @@ fun DatePickerField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String = "Pilih tanggal",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    readOnly: Boolean = false
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
@@ -61,7 +61,7 @@ fun DatePickerField(
             onValueChange = { },
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { showDatePicker = true },
+                .clickable(enabled = !readOnly) { showDatePicker = true },
             placeholder = {
                 Text(
                     text = placeholder,
