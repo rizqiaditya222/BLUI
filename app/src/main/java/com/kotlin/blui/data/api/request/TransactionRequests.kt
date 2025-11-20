@@ -1,7 +1,7 @@
 package com.kotlin.blui.data.api.request
 
 data class CreateTransactionRequest(
-    val type: String, // "income" or "expense"
+    val type: String,
     val name: String,
     val categoryId: String,
     val amount: Double,

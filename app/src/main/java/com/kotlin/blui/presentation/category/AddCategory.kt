@@ -17,9 +17,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,9 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kotlin.blui.domain.model.CategoryColor
@@ -39,13 +42,16 @@ import com.kotlin.blui.domain.model.CategoryTemplates
 import com.kotlin.blui.presentation.component.CategoryIcon
 import com.kotlin.blui.presentation.component.CustomOutlinedTextField
 import com.kotlin.blui.presentation.component.PrimaryButton
-import com.kotlin.blui.ui.theme.BluiTheme
 
 @Composable
 fun AddCategory(
     onDismiss: () -> Unit = {},
     onCategorySelected: (CategoryTemplate, Color?) -> Unit = { _, _ -> }
 ) {
+    val context = LocalContext.current
+    val viewModel = remember { KategoryViewModel(context) }
+    val uiState by viewModel.uiState.collectAsState()
+
     var categoryName by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<CategoryTemplate?>(null) }
     var selectedColor by remember { mutableStateOf<Color?>(null) }
@@ -181,23 +187,58 @@ fun AddCategory(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                PrimaryButton(
-                    text = "Simpan",
-                    onClick = {
-                        selectedCategory?.let { category ->
-                            onCategorySelected(category, selectedColor)
-                        }
-                    },
-                )
+                // Show loading or button
+                if (uiState.isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    PrimaryButton(
+                        text = "Simpan",
+                        onClick = {
+                            if (categoryName.isNotBlank() && selectedCategory != null && selectedColor != null) {
+                                // Convert icon name to string (you can customize this mapping)
+                                val iconName = selectedCategory!!.name.lowercase().replace(" ", "_")
+
+                                // Convert color to hex string (lowercase, without alpha channel)
+                                val colorInt = selectedColor!!.toArgb()
+                                val colorHex = String.format("#%06x", 0xFFFFFF and colorInt)
+
+                                println("AddCategory - Creating category:")
+                                println("  Category Name: $categoryName")
+                                println("  Icon Name: $iconName")
+                                println("  Color Hex: $colorHex")
+
+                                viewModel.createCategory(
+                                    name = categoryName,
+                                    icon = iconName,
+                                    color = colorHex,
+                                    onSuccess = {
+                                        onCategorySelected(selectedCategory!!, selectedColor)
+                                        onDismiss()
+                                    }
+                                )
+                            }
+                        },
+                        enabled = categoryName.isNotBlank() && selectedCategory != null && selectedColor != null
+                    )
+                }
+
+                // Show error message if any
+                uiState.errorMessage?.let { error ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
-    }
-}
-
-@Preview
-@Composable
-fun AddCategoryPreview() {
-    BluiTheme {
-        AddCategory()
     }
 }

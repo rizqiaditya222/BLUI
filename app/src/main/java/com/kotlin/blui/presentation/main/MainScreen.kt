@@ -10,16 +10,21 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import com.kotlin.blui.presentation.component.BottomNavigationBar
 import com.kotlin.blui.presentation.home.HomeScreen
+import com.kotlin.blui.presentation.home.HomeScreenViewModel
 import com.kotlin.blui.presentation.profile.ProfileScreen
 
 @Composable
 fun MainScreen(
     onNavigateToTransaction: (String) -> Unit = {},
-    onNavigateToDetail: () -> Unit = {}
+    onNavigateToDetail: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {}
 ) {
     var selectedItem by remember { mutableIntStateOf(0) }
+    val context = LocalContext.current
+    val homeViewModel = remember { HomeScreenViewModel(context) }
 
     Scaffold(
         bottomBar = {
@@ -39,10 +44,12 @@ fun MainScreen(
         ) {
             when (selectedItem) {
                 0 -> HomeScreen(
-                    onNavigateToTransaction = onNavigateToTransaction,
-                    onNavigateToDetail = onNavigateToDetail
+                    viewModel = homeViewModel,
+                    onNavigateToTransaction = { onNavigateToTransaction("add") }
                 )
-                2 -> ProfileScreen()
+                2 -> ProfileScreen(
+                    onLogout = onNavigateToLogin
+                )
             }
         }
     }

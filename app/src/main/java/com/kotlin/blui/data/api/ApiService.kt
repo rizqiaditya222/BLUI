@@ -76,6 +76,10 @@ interface ApiService {
         @Query("endDate") endDate: String?
     ): GroupedTransactionsResponse
 
+    // Get single transaction by ID
+    @GET("transactions/{id}")
+    suspend fun getTransactionById(@Path("id") id: String): TransactionResponse
+
     @POST("transactions")
     suspend fun createTransaction(@Body request: CreateTransactionRequest): TransactionResponse
 

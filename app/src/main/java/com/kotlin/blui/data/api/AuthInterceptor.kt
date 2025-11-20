@@ -17,16 +17,14 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
 
         // Jika tidak ada token, lanjutkan request tanpa header Authorization
         // (untuk endpoint register dan login)
-        if (token.isNullOrEmpty()) {
-            return chain.proceed(originalRequest)
+        val newRequest = if (token != null) {
+            originalRequest.newBuilder()
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+        } else {
+            originalRequest
         }
-
-        // Tambahkan Authorization header dengan Bearer token
-        val newRequest = originalRequest.newBuilder()
-            .header("Authorization", "Bearer $token")
-            .build()
 
         return chain.proceed(newRequest)
     }
 }
-

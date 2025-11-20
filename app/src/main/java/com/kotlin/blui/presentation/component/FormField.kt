@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -23,7 +24,11 @@ fun FormField(
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    trailingIcon: @Composable (() -> Unit)? = null
+    trailingIcon: @Composable (() -> Unit)? = null,
+    singleLine: Boolean = true,
+    readOnly: Boolean = false,
+    enabled: Boolean = true,
+    isPassword: Boolean = false
 ) {
     Column(modifier = modifier) {
         Text(
@@ -42,8 +47,11 @@ fun FormField(
             leadingIcon = leadingIcon,
             modifier = Modifier.fillMaxWidth(),
             keyboardType = keyboardType,
-            visualTransformation = visualTransformation,
-            trailingIcon = trailingIcon
+            visualTransformation = if (isPassword) PasswordVisualTransformation() else visualTransformation,
+            trailingIcon = trailingIcon,
+            singleLine = singleLine,
+            readOnly = readOnly,
+            enabled = enabled
         )
     }
 }

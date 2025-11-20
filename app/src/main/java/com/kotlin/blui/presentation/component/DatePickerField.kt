@@ -43,7 +43,20 @@ fun DatePickerField(
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
-    val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+
+    val apiFormatter = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
+    val displayFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+
+    val displayText = remember(value) {
+        if (value.isBlank()) "" else {
+            try {
+                val parsed = apiFormatter.parse(value)
+                if (parsed != null) displayFormatter.format(parsed) else value
+            } catch (e: Exception) {
+                value
+            }
+        }
+    }
 
     Column(modifier = modifier) {
         // Label
@@ -57,7 +70,7 @@ fun DatePickerField(
         )
 
         OutlinedTextField(
-            value = value,
+            value = displayText,
             onValueChange = { },
             modifier = Modifier
                 .fillMaxWidth()
@@ -95,8 +108,8 @@ fun DatePickerField(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
-                            val formattedDate = dateFormatter.format(Date(millis))
-                            onValueChange(formattedDate)
+                            val apiDate = apiFormatter.format(Date(millis))
+                            onValueChange(apiDate) // kirim ke ViewModel dalam format yyyy-MM-dd
                         }
                         showDatePicker = false
                     }

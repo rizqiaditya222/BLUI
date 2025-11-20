@@ -26,7 +26,7 @@ fun TransactionDateGroup(
     date: String,
     transactions: List<Transaction>,
     modifier: Modifier = Modifier,
-    onTransactionClick: () -> Unit = {}
+    onTransactionClick: (Int) -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -37,13 +37,13 @@ fun TransactionDateGroup(
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        transactions.forEach { transaction ->
+        transactions.forEachIndexed { index, transaction ->
             TransactionItem(
                 categoryIcon = transaction.categoryIcon,
                 categoryColor = transaction.categoryColor,
                 transactionName = transaction.name,
                 amount = transaction.amount,
-                onClick = onTransactionClick
+                onClick = { onTransactionClick(index) }
             )
         }
     }

@@ -7,13 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -21,72 +18,73 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person2
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kotlin.blui.R
-import com.kotlin.blui.R.drawable
 import com.kotlin.blui.presentation.component.DatePickerField
 import com.kotlin.blui.presentation.component.FormField
 import com.kotlin.blui.presentation.component.PrimaryButton
 import com.kotlin.blui.ui.theme.BluiTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    onRegisterClick: (name: String, email: String, dateOfBirth: String, password: String) -> Unit = { _, _, _, _ -> },
-    onLoginClick: () -> Unit = {}
+    onNavigateToMain: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {}
 ) {
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var dateOfBirth by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val viewModel = remember { RegisterViewModel(context) }
+    val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Navigate to main when registration is successful
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onNavigateToMain()
+        }
+    }
+
+    // Show error message
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        val layoutDirection = LocalLayoutDirection.current
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    start = paddingValues.calculateStartPadding(layoutDirection),
-                    end = paddingValues.calculateEndPadding(layoutDirection),
-                    bottom = paddingValues.calculateBottomPadding()
-                    // top padding intentionally omitted
-                )
+                .padding(paddingValues)
         ) {
+            // Background decoration
             Image(
-                painter = painterResource(id = drawable.regist_decoration),
+                painter = painterResource(id = R.drawable.regist_decoration),
                 contentDescription = "Auth Decoration",
-                modifier = Modifier
-                    .align(Alignment.TopStart),
+                modifier = Modifier.align(Alignment.TopStart),
                 contentScale = ContentScale.Fit
             )
 
@@ -95,57 +93,67 @@ fun RegisterScreen(
                     .fillMaxSize()
                     .verticalScroll(scrollState)
                     .padding(horizontal = 24.dp)
-                    .padding(top = 48.dp, bottom = 24.dp),
+                    .padding(top = 80.dp, bottom = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Header
+                // Logo or App Name
                 Text(
-                    text = "Register",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                    text = "Blui",
+                    fontSize = 48.sp,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 32.sp
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Buat akun baru",
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                // Name Form Field
+                // Name Field
                 FormField(
                     label = "Nama Lengkap",
-                    value = name,
-                    onValueChange = { name = it },
+                    value = uiState.name,
+                    onValueChange = { viewModel.onNameChange(it) },
                     placeholder = "Masukkan nama lengkap",
                     leadingIcon = Icons.Default.Person2,
                     keyboardType = KeyboardType.Text,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .widthIn(max = 600.dp)
+                        .widthIn(max = 600.dp),
+                    enabled = !uiState.isLoading
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Email Form Field
+                // Email Field
                 FormField(
                     label = "Email",
-                    value = email,
-                    onValueChange = { email = it },
+                    value = uiState.email,
+                    onValueChange = { viewModel.onEmailChange(it) },
                     placeholder = "Masukkan email",
                     leadingIcon = Icons.Default.Email,
                     keyboardType = KeyboardType.Email,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .widthIn(max = 600.dp)
+                        .widthIn(max = 600.dp),
+                    enabled = !uiState.isLoading
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Date of Birth Field with DatePicker
+                // Date of Birth Field
                 DatePickerField(
                     label = "Tanggal Lahir",
-                    value = dateOfBirth,
-                    onValueChange = { dateOfBirth = it },
+                    value = uiState.dateOfBirth,
+                    onValueChange = { viewModel.onDateOfBirthChange(it) },
                     placeholder = "Pilih tanggal lahir",
+                    readOnly = uiState.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .widthIn(max = 600.dp)
@@ -153,61 +161,83 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Password Form Field
+                // Password Field
                 FormField(
                     label = "Password",
-                    value = password,
-                    onValueChange = { password = it },
-                    placeholder = "Masukkan password",
+                    value = uiState.password,
+                    onValueChange = { viewModel.onPasswordChange(it) },
+                    placeholder = "Masukkan password (min. 6 karakter)",
                     leadingIcon = Icons.Default.Lock,
                     keyboardType = KeyboardType.Password,
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(
-                                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = if (passwordVisible) "Hide password" else "Show password"
-                            )
-                        }
-                    },
+                    isPassword = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .widthIn(max = 600.dp)
+                        .widthIn(max = 600.dp),
+                    enabled = !uiState.isLoading
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Confirm Password Field
+                FormField(
+                    label = "Konfirmasi Password",
+                    value = uiState.confirmPassword,
+                    onValueChange = { viewModel.onConfirmPasswordChange(it) },
+                    placeholder = "Masukkan ulang password",
+                    leadingIcon = Icons.Default.Lock,
+                    keyboardType = KeyboardType.Password,
+                    isPassword = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 600.dp),
+                    enabled = !uiState.isLoading
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Register Button
                 PrimaryButton(
-                    text = "Register",
-                    onClick = { onRegisterClick(name, email, dateOfBirth, password) },
-                    modifier = Modifier.widthIn(max = 600.dp)
+                    onClick = { viewModel.register() },
+                    text = if (uiState.isLoading) "Memproses..." else "Daftar",
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 600.dp)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Login Link
-                Row(modifier = Modifier.padding(top = 8.dp)) {
-                    Text(
-                        text = "Sudah punya akun? ",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = "Login",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.clickable { onLoginClick() }
-                    )
+                if (uiState.isLoading) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    CircularProgressIndicator()
                 }
 
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Login Link
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Sudah punya akun? ",
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = "Masuk",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable(enabled = !uiState.isLoading) {
+                            onNavigateToLogin()
+                        }
+                    )
+                }
             }
         }
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun RegisterScreenPreview() {
     BluiTheme {

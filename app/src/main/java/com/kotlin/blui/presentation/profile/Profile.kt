@@ -19,11 +19,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person2
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,17 +54,45 @@ import com.kotlin.blui.ui.theme.BluiTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-
-
+    onLogout: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val viewModel = remember { ProfileViewModel(context) }
+    val uiState by viewModel.uiState.collectAsState()
+
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var dateOfBirth by remember { mutableStateOf("") }
     var isEditMode by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Update local state when ViewModel state changes
+    LaunchedEffect(uiState) {
+        if (!isEditMode) {
+            name = uiState.name
+            email = uiState.email
+            dateOfBirth = uiState.dateOfBirth
+        }
+    }
+
+    // Handle logout navigation
+    LaunchedEffect(uiState.isLoggedOut) {
+        if (uiState.isLoggedOut) {
+            onLogout()
+        }
+    }
+
+    // Show error message
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { },
@@ -74,8 +108,11 @@ fun ProfileScreen(
                         modifier = Modifier
                             .padding(end = 24.dp)
                             .clickable {
+                                if (isEditMode) {
+                                    // Save changes
+                                    viewModel.updateProfile(name, email, dateOfBirth)
+                                }
                                 isEditMode = !isEditMode
-                                // TODO: Simpan data jika isEditMode berubah dari true ke false
                             }
                     )
                 }
@@ -100,6 +137,12 @@ fun ProfileScreen(
                     .align(Alignment.TopStart),
                 contentScale = ContentScale.Fit
             )
+
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
 
             Column(
                 modifier = Modifier
@@ -130,7 +173,8 @@ fun ProfileScreen(
                     keyboardType = KeyboardType.Text,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .widthIn(max = 600.dp)
+                        .widthIn(max = 600.dp),
+                    enabled = isEditMode
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -145,7 +189,8 @@ fun ProfileScreen(
                     keyboardType = KeyboardType.Email,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .widthIn(max = 600.dp)
+                        .widthIn(max = 600.dp),
+                    enabled = false // Email tidak bisa diubah
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -167,7 +212,7 @@ fun ProfileScreen(
                 // Sign Out button - only shown when not in edit mode
                 if (!isEditMode) {
                     DeleteButton(
-                        onClick = { /* Handle sign out */ },
+                        onClick = { viewModel.logout() },
                         text = "Sign Out"
                     )
                 }

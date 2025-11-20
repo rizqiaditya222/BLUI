@@ -1,7 +1,5 @@
 package com.kotlin.blui.domain.model
 
-import com.kotlin.blui.domain.model.CategorySummary
-
 data class MonthlySummary(
     val userId: String,
     val month: Int,
@@ -12,3 +10,4 @@ data class MonthlySummary(
     val incomeByCategory: List<CategorySummary>?,
     val expenseByCategory: List<CategorySummary>?
 )
+

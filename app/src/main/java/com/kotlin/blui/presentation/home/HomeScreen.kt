@@ -3,16 +3,7 @@ package com.kotlin.blui.presentation.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,15 +11,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.LocalCafe
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,9 +26,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 import com.kotlin.blui.presentation.component.CategoryIcon
 import com.kotlin.blui.presentation.component.MonthYearPickerDialog
 import com.kotlin.blui.presentation.component.PieChart
@@ -52,95 +38,31 @@ import com.kotlin.blui.presentation.component.TransactionDateGroup
 import com.kotlin.blui.presentation.component.TransactionFilter
 import com.kotlin.blui.ui.theme.BlueLight
 import com.kotlin.blui.ui.theme.BlueLightActive
-import com.kotlin.blui.ui.theme.BluiTheme
-import java.util.Calendar
-
-// Extended Transaction data with category info
-data class TransactionWithCategory(
-    val transaction: Transaction,
-    val categoryId: String,
-    val categoryName: String
-)
+import com.kotlin.blui.utils.IconMapper
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
-    onNavigateToTransaction: (String) -> Unit = {},
+    viewModel: HomeScreenViewModel,
+    onNavigateToTransaction: () -> Unit = {},
     onNavigateToDetail: () -> Unit = {}
 ) {
-    var selectedDate by remember { mutableStateOf("November 2025") }
+    val uiState by viewModel.uiState.collectAsState()
+
+    val monthNames = listOf(
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    )
+
+    var selectedDate by remember {
+        mutableStateOf("${monthNames[uiState.selectedMonth - 1]} ${uiState.selectedYear}")
+    }
     var selectedType by remember { mutableStateOf("Expense") }
     var showMonthYearPicker by remember { mutableStateOf(false) }
 
-    val calendar = remember { Calendar.getInstance() }
-    val pickerYear = remember { calendar.get(Calendar.YEAR) }
-    val pickerMonthIndex = remember { calendar.get(Calendar.MONTH) }
-
-    // Sample data dummy with category info
-    val transactionsWithCategory = listOf(
-        "20 November 2025" to listOf(
-            TransactionWithCategory(
-                Transaction(Icons.Default.Restaurant, Color(0xFF4ECAF6), "Geprek Sambal Bawang", "Rp 20.000"),
-                "cat1", "Makanan & Minuman"
-            ),
-            TransactionWithCategory(
-                Transaction(Icons.Default.LocalCafe, Color(0xFF4ECAF6), "Kopi Pagi", "Rp 15.000"),
-                "cat1", "Makanan & Minuman"
-            )
-        ),
-        "19 November 2025" to listOf(
-            TransactionWithCategory(
-                Transaction(Icons.Default.ShoppingCart, Color(0xFFFFC658), "Belanja Bulanan", "Rp 150.000"),
-                "cat3", "Lain-lain"
-            ),
-            TransactionWithCategory(
-                Transaction(Icons.Default.Restaurant, Color(0xFF4ECAF6), "Makan Malam", "Rp 35.000"),
-                "cat1", "Makanan & Minuman"
-            ),
-            TransactionWithCategory(
-                Transaction(Icons.Default.DirectionsCar, Color(0xFFFF9CAC), "Bensin", "Rp 50.000"),
-                "cat2", "Transportasi"
-            )
-        )
-    )
-
-    // Convert to format for TransactionDateGroup
-    val transactionsByDate = transactionsWithCategory.map { (date, items) ->
-        date to items.map { it.transaction }
-    }
-
-    // Calculate pie chart data from all transactions
-    val pieChartData by remember(transactionsWithCategory) {
-        derivedStateOf {
-            val categoryMap = mutableMapOf<String, PieChartData>()
-
-            transactionsWithCategory.forEach { (_, transactions) ->
-                transactions.forEach { item ->
-                    // Parse amount: remove "Rp", spaces, and dots (thousand separator)
-                    val amountStr = item.transaction.amount
-                        .replace("Rp", "")
-                        .replace(".", "")
-                        .replace(" ", "")
-                        .trim()
-                    val amount = amountStr.toDoubleOrNull() ?: 0.0
-
-                    if (categoryMap.containsKey(item.categoryId)) {
-                        val existing = categoryMap[item.categoryId]!!
-                        categoryMap[item.categoryId] = existing.copy(
-                            amount = existing.amount + amount
-                        )
-                    } else {
-                        categoryMap[item.categoryId] = PieChartData(
-                            categoryName = item.categoryName,
-                            amount = amount,
-                            color = item.transaction.categoryColor
-                        )
-                    }
-                }
-            }
-
-            categoryMap.values.toList().sortedByDescending { it.amount }
-        }
-    }
+    // Update selectedDate when month/year changes
+    selectedDate = "${monthNames[uiState.selectedMonth - 1]} ${uiState.selectedYear}"
 
     val gradient = Brush.horizontalGradient(
         colors = listOf(
@@ -148,6 +70,52 @@ fun HomeScreen(
             BlueLightActive
         )
     )
+
+    // Calculate pie chart data based on selected type
+    val pieChartData by remember(uiState.currentSummary, selectedType) {
+        derivedStateOf {
+            val categoryData = if (selectedType == "Income") {
+                uiState.currentSummary?.incomeByCategory
+            } else {
+                uiState.currentSummary?.expenseByCategory
+            }
+
+            categoryData?.map { category ->
+                PieChartData(
+                    categoryName = category.categoryName,
+                    amount = category.total,
+                    color = parseColor(category.categoryColor)
+                )
+            } ?: emptyList()
+        }
+    }
+
+    // Convert category summaries to transaction list for display
+    val transactionsByDate by remember(uiState.currentSummary, selectedType) {
+        derivedStateOf {
+            val categoryData = if (selectedType == "Income") {
+                uiState.currentSummary?.incomeByCategory
+            } else {
+                uiState.currentSummary?.expenseByCategory
+            }
+
+            if (categoryData?.isNotEmpty() == true) {
+                // Group by current date as we only have summary data
+                listOf(
+                    "12 ${monthNames[uiState.selectedMonth - 1]} ${uiState.selectedYear}" to categoryData.map { category ->
+                        Transaction(
+                            categoryIcon = IconMapper.getIconForCategory(category.categoryIcon),
+                            categoryColor = parseColor(category.categoryColor),
+                            name = category.categoryName,
+                            amount = formatCurrency(category.total)
+                        )
+                    }
+                )
+            } else {
+                emptyList()
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.padding(24.dp)) {
@@ -182,7 +150,7 @@ fun HomeScreen(
                             )
                         }
                         Text(
-                            "Rp. 500.000",
+                            text = formatCurrency(uiState.currentSummary?.balance ?: 0.0),
                             fontSize = 32.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.White
@@ -192,7 +160,7 @@ fun HomeScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.clickable(
-                            onClick = { onNavigateToTransaction("add") },
+                            onClick = onNavigateToTransaction,
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
                         )
@@ -246,7 +214,7 @@ fun HomeScreen(
                         }
                         Spacer(modifier = Modifier.padding(vertical = 4.dp))
                         Text(
-                            "Rp. 300.000",
+                            text = formatCurrency(uiState.currentSummary?.totalIncome ?: 0.0),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.White
@@ -287,7 +255,7 @@ fun HomeScreen(
                         }
                         Spacer(modifier = Modifier.padding(vertical = 4.dp))
                         Text(
-                            "Rp. 200K",
+                            text = formatCurrency(uiState.currentSummary?.totalExpense ?: 0.0),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.White
@@ -309,10 +277,21 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Pie Chart
-            PieChart(
-                data = pieChartData,
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                PieChart(
+                    data = pieChartData,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -333,7 +312,7 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable(
-                        onClick = { onNavigateToDetail() },
+                        onClick = onNavigateToDetail,
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }
                     )
@@ -343,32 +322,61 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // List transaksi per tanggal
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(transactionsByDate) { (date, transactions) ->
-                    TransactionDateGroup(date = date, transactions = transactions)
-                    Spacer(modifier = Modifier.height(16.dp))
+            if (uiState.errorMessage != null) {
+                Text(
+                    text = uiState.errorMessage ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            } else if (transactionsByDate.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(transactionsByDate) { (date, transactions) ->
+                        TransactionDateGroup(date = date, transactions = transactions)
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Tidak ada data",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(32.dp)
+                    )
                 }
             }
         }
 
         // Month/Year Picker Dialog - using reusable component
-        MonthYearPickerDialog(
-            show = showMonthYearPicker,
-            initialYear = pickerYear,
-            initialMonth = pickerMonthIndex,
-            onDismiss = { showMonthYearPicker = false },
-            onConfirm = { dateString ->
-                selectedDate = dateString
-                showMonthYearPicker = false
-            }
-        )
+        if (showMonthYearPicker) {
+            MonthYearPickerDialog(
+                show = showMonthYearPicker,
+                initialYear = uiState.selectedYear,
+                initialMonth = uiState.selectedMonth - 1,
+                onDismiss = { showMonthYearPicker = false },
+                onConfirm = { dateString ->
+                    showMonthYearPicker = false
+                },
+                onMonthYearSelected = { month, year ->
+                    viewModel.onMonthChange(month + 1)
+                    viewModel.onYearChange(year)
+                }
+            )
+        }
     }
 }
 
-@Preview
-@Composable
-fun HomeScreenPreview() {
-    BluiTheme {
-        HomeScreen()
+fun parseColor(colorString: String): Color {
+    return try {
+        Color(colorString.toColorInt())
+    } catch (_: Exception) {
+        Color.Gray
     }
+}
+
+fun formatCurrency(amount: Double): String {
+    val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+    return format.format(amount)
 }

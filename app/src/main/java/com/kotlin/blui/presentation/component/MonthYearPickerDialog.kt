@@ -39,6 +39,7 @@ fun MonthYearPickerDialog(
     initialMonth: Int,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
+    onMonthYearSelected: (month: Int, year: Int) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     if (!show) return
@@ -110,6 +111,7 @@ fun MonthYearPickerDialog(
                                 .height(48.dp)
                                 .clickable {
                                     pickerMonthIndex = monthIndex
+                                    onMonthYearSelected(monthIndex, pickerYear)
                                 }
                         ) {
                             Box(
@@ -158,4 +160,3 @@ fun MonthYearPickerDialog(
         }
     }
 }
-

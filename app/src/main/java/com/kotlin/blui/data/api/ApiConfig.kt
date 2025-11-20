@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiConfig {
 
-    private const val BASE_URL = "https://blui.elginbrian.com/"
+    private const val BASE_URL = "https://blui.elginbrian.com/api/v1/"
 
     private const val CONNECT_TIMEOUT = 30L
     private const val READ_TIMEOUT = 30L
@@ -26,10 +26,23 @@ object ApiConfig {
             // Log request
             println("API Request: ${request.method} ${request.url}")
 
+            // Log request body
+            request.body?.let { body ->
+                val buffer = okio.Buffer()
+                body.writeTo(buffer)
+                println("Request Body: ${buffer.readUtf8()}")
+            }
+
             val response = chain.proceed(request)
 
             // Log response
             println("API Response: ${response.code} ${request.url}")
+
+            // Log response body for errors
+            if (!response.isSuccessful) {
+                val responseBody = response.peekBody(Long.MAX_VALUE)
+                println("Error Response Body: ${responseBody.string()}")
+            }
 
             return response
         }

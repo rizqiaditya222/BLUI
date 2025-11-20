@@ -9,6 +9,8 @@ import com.kotlin.blui.data.api.request.RegisterRequest
 import com.kotlin.blui.data.api.request.UpdateProfileRequest
 import com.kotlin.blui.data.api.response.AuthResponse
 import com.kotlin.blui.data.api.response.UserResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -31,7 +33,22 @@ class AuthRepository(private val context: Context) {
         dateOfBirth: String
     ): Result<AuthResponse> {
         return try {
-            val request = RegisterRequest(fullName, email, password, dateOfBirth)
+            val request = RegisterRequest(
+                fullName = fullName,
+                email = email,
+                dateOfBirth = dateOfBirth,
+                photoUrl = null,
+                password = password
+            )
+
+            // Debug logging
+            println("Register Request Data:")
+            println("  full_name: $fullName")
+            println("  email: $email")
+            println("  date_of_birth: $dateOfBirth")
+            println("  photo_url: null")
+            println("  password: ${password.take(3)}***")
+
             val response = apiService.register(request)
 
             tokenManager.saveToken(response.token)
@@ -39,6 +56,8 @@ class AuthRepository(private val context: Context) {
 
             Result.success(response)
         } catch (e: Exception) {
+            println("Register Error: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -48,17 +67,19 @@ class AuthRepository(private val context: Context) {
      * Setelah sukses, token otomatis disimpan
      */
     suspend fun login(email: String, password: String): Result<AuthResponse> {
-        return try {
-            val request = LoginRequest(email, password)
-            val response = apiService.login(request)
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = LoginRequest(email, password)
+                val response = apiService.login(request)
 
-            // Simpan token dan userId setelah login sukses
-            tokenManager.saveToken(response.token)
-            tokenManager.saveUserId(response.user.id)
+                // Simpan token dan userId setelah login sukses
+                tokenManager.saveToken(response.token)
+                tokenManager.saveUserId(response.user.id)
 
-            Result.success(response)
-        } catch (e: Exception) {
-            Result.failure(e)
+                Result.success(response)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
     }
 

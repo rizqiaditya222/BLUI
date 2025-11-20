@@ -73,6 +73,13 @@ fun TransactionFilter(
                 modifier = Modifier.background(MaterialTheme.colorScheme.background)
             ) {
                 DropdownMenuItem(
+                    text = { Text("All") },
+                    onClick = {
+                        onTypeChange("All")
+                        expandedTypeMenu = false
+                    }
+                )
+                DropdownMenuItem(
                     text = { Text("Expense") },
                     onClick = {
                         onTypeChange("Expense")
@@ -90,4 +97,3 @@ fun TransactionFilter(
         }
     }
 }
-
