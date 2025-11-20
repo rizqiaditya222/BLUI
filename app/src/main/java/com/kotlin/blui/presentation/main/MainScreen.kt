@@ -45,7 +45,8 @@ fun MainScreen(
             when (selectedItem) {
                 0 -> HomeScreen(
                     viewModel = homeViewModel,
-                    onNavigateToTransaction = { onNavigateToTransaction("add") }
+                    onNavigateToTransaction = { onNavigateToTransaction("add") },
+                    onNavigateToDetail = onNavigateToDetail
                 )
                 2 -> ProfileScreen(
                     onLogout = onNavigateToLogin

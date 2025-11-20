@@ -215,7 +215,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.padding(vertical = 4.dp))
                         Text(
                             text = formatCurrency(uiState.currentSummary?.totalIncome ?: 0.0),
-                            fontSize = 20.sp,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.White
                         )
@@ -256,7 +256,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.padding(vertical = 4.dp))
                         Text(
                             text = formatCurrency(uiState.currentSummary?.totalExpense ?: 0.0),
-                            fontSize = 20.sp,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.White
                         )

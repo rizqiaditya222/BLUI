@@ -22,10 +22,6 @@ class AuthRepository(private val context: Context) {
     private val apiService: ApiService = ApiConfig.getApiService(context)
     private val tokenManager: TokenManager = TokenManager(context)
 
-    /**
-     * Register user baru
-     * Setelah sukses, token otomatis disimpan
-     */
     suspend fun register(
         fullName: String,
         email: String,
@@ -41,7 +37,6 @@ class AuthRepository(private val context: Context) {
                 password = password
             )
 
-            // Debug logging
             println("Register Request Data:")
             println("  full_name: $fullName")
             println("  email: $email")
@@ -62,10 +57,7 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Login user
-     * Setelah sukses, token otomatis disimpan
-     */
+
     suspend fun login(email: String, password: String): Result<AuthResponse> {
         return withContext(Dispatchers.IO) {
             try {
@@ -83,25 +75,17 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Logout user
-     * Hapus token dan semua data user dari local storage
-     */
+
     fun logout() {
         tokenManager.clearToken()
     }
 
-    /**
-     * Cek apakah user sudah login
-     */
+
     fun isLoggedIn(): Boolean {
         return tokenManager.isLoggedIn()
     }
 
-    /**
-     * Get profil user saat ini
-     * Memerlukan token (user harus sudah login)
-     */
+
     suspend fun getProfile(): Result<UserResponse> {
         return try {
             val response = apiService.getProfile()
@@ -111,9 +95,7 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Update profil user
-     */
+
     suspend fun updateProfile(
         fullName: String?,
         dateOfBirth: String?,
@@ -128,10 +110,6 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Upload foto profil
-     * @param file File gambar yang akan di-upload
-     */
     suspend fun uploadPhoto(file: File): Result<UserResponse> {
         return try {
             val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())

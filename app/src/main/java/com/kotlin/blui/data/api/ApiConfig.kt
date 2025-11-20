@@ -16,9 +16,6 @@ object ApiConfig {
     private const val READ_TIMEOUT = 30L
     private const val WRITE_TIMEOUT = 30L
 
-    /**
-     * Logging interceptor sederhana untuk debugging
-     */
     private class LoggingInterceptor : Interceptor {
         override fun intercept(chain: Interceptor.Chain): Response {
             val request = chain.request()
