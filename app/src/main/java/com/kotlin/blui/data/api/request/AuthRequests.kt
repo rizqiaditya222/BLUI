@@ -8,8 +8,7 @@ data class LoginRequest(
 )
 
 data class RegisterRequest(
-    @SerializedName("full_name")
-    val fullName: String,
+    val name: String,
     val email: String,
     @SerializedName("date_of_birth")
     val dateOfBirth: String,

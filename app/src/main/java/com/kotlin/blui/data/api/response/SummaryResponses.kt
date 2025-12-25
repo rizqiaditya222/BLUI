@@ -11,14 +11,14 @@ data class CategorySummary(
 )
 
 data class BalanceSummaryResponse(
-    val userId: String, // ID user pemilik summary
-    val month: Int, // 1-12
+    val userId: String,
+    val month: Int,
     val year: Int,
     val balance: Double,
     val totalIncome: Double,
     val totalExpense: Double,
-    val incomeByCategory: List<CategorySummary>?, // Breakdown income per kategori
-    val expenseByCategory: List<CategorySummary>? // Breakdown expense per kategori (untuk pie chart)
+    val incomeByCategory: List<CategorySummary>?,
+    val expenseByCategory: List<CategorySummary>?
 )
 
 // Response untuk mendapatkan riwayat beberapa bulan

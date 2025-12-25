@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiConfig {
 
-    private const val BASE_URL = "https://blui.elginbrian.com/api/v1/"
+    private const val BASE_URL = "http://159.223.67.39:3000/"
 
     private const val CONNECT_TIMEOUT = 30L
     private const val READ_TIMEOUT = 30L
@@ -20,10 +20,20 @@ object ApiConfig {
         override fun intercept(chain: Interceptor.Chain): Response {
             val request = chain.request()
 
-            // Log request
             println("API Request: ${request.method} ${request.url}")
 
-            // Log request body
+            val headers = request.headers
+            val headersLog = headers.names().joinToString(", ") { name ->
+                val value = if (name.equals("Authorization", ignoreCase = true)) {
+                    val raw = headers[name] ?: ""
+                    if (raw.length > 12) raw.substring(0, 12) + "..." else raw
+                } else {
+                    headers[name]
+                }
+                "$name: $value"
+            }
+            println("Request Headers: $headersLog")
+
             request.body?.let { body ->
                 val buffer = okio.Buffer()
                 body.writeTo(buffer)
@@ -32,10 +42,8 @@ object ApiConfig {
 
             val response = chain.proceed(request)
 
-            // Log response
             println("API Response: ${response.code} ${request.url}")
 
-            // Log response body for errors
             if (!response.isSuccessful) {
                 val responseBody = response.peekBody(Long.MAX_VALUE)
                 println("Error Response Body: ${responseBody.string()}")
@@ -45,28 +53,21 @@ object ApiConfig {
         }
     }
 
-    /**
-     * Membuat OkHttpClient dengan interceptor untuk logging dan authentication
-     */
     private fun provideOkHttpClient(tokenManager: TokenManager): OkHttpClient {
-        // Auth interceptor untuk menambahkan JWT token
         val authInterceptor = AuthInterceptor(tokenManager)
 
-        // Logging interceptor untuk debugging
         val loggingInterceptor = LoggingInterceptor()
 
         return OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
             .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
             .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
             .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
             .build()
     }
 
-    /**
-     * Membuat instance Retrofit
-     */
+
     private fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -76,14 +77,11 @@ object ApiConfig {
     }
 
     /**
-     * Membuat instance ApiService
-     * Dipanggil dari Repository atau ViewModel
-     *
      * @param context Context untuk TokenManager
-     * @return ApiService yang siap digunakan
+     * @return
      */
     fun getApiService(context: Context): ApiService {
-        val tokenManager = TokenManager(context)
+        val tokenManager = TokenManager.getInstance(context)
         val okHttpClient = provideOkHttpClient(tokenManager)
         val retrofit = provideRetrofit(okHttpClient)
         return retrofit.create(ApiService::class.java)

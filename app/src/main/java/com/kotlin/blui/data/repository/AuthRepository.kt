@@ -20,7 +20,7 @@ import java.io.File
 class AuthRepository(private val context: Context) {
 
     private val apiService: ApiService = ApiConfig.getApiService(context)
-    private val tokenManager: TokenManager = TokenManager(context)
+    private val tokenManager: TokenManager = TokenManager.getInstance(context)
 
     suspend fun register(
         fullName: String,
@@ -30,7 +30,7 @@ class AuthRepository(private val context: Context) {
     ): Result<AuthResponse> {
         return try {
             val request = RegisterRequest(
-                fullName = fullName,
+                name = fullName,
                 email = email,
                 dateOfBirth = dateOfBirth,
                 photoUrl = null,
@@ -46,8 +46,24 @@ class AuthRepository(private val context: Context) {
 
             val response = apiService.register(request)
 
-            tokenManager.saveToken(response.token)
-            tokenManager.saveUserId(response.user.id)
+            if (!response.token.isNullOrEmpty()) {
+                val masked = if (response.token.length > 12) response.token.substring(0, 12) + "..." else response.token
+                println("AuthRepository.register: received token (masked): $masked")
+            } else {
+                println("AuthRepository.register: no token in response")
+            }
+
+            if (!response.token.isNullOrEmpty()) {
+                tokenManager.saveToken(response.token!!)
+            } else {
+                println("Register Warning: no token returned from API; skipping saveToken")
+            }
+
+            try {
+                tokenManager.saveUserId(response.user.id)
+            } catch (e: Exception) {
+                println("Register Warning: failed to save user id: ${e.message}")
+            }
 
             Result.success(response)
         } catch (e: Exception) {
@@ -64,12 +80,25 @@ class AuthRepository(private val context: Context) {
                 val request = LoginRequest(email, password)
                 val response = apiService.login(request)
 
-                // Simpan token dan userId setelah login sukses
-                tokenManager.saveToken(response.token)
+                if (!response.token.isNullOrEmpty()) {
+                    val masked = if (response.token.length > 12) response.token.substring(0, 12) + "..." else response.token
+                    println("AuthRepository.login: received token (masked): $masked")
+                } else {
+                    println("AuthRepository.login: no token in response")
+                }
+
+                if (!response.token.isNullOrEmpty()) {
+                    tokenManager.saveToken(response.token!!)
+                } else {
+                    println("Login Warning: no token returned from API; skipping saveToken")
+                }
+
                 tokenManager.saveUserId(response.user.id)
 
                 Result.success(response)
             } catch (e: Exception) {
+                println("Login Error: ${e.message}")
+                e.printStackTrace()
                 Result.failure(e)
             }
         }

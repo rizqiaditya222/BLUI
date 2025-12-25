@@ -3,12 +3,8 @@ package com.kotlin.blui.data.api
 import android.content.Context
 import android.content.SharedPreferences
 
-/**
- * TokenManager untuk menyimpan dan mengambil JWT token
- * Menggunakan SharedPreferences untuk persistent storage
- */
 class TokenManager(context: Context) {
-    private val prefs: SharedPreferences = context.getSharedPreferences(
+    private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences(
         PREFS_NAME,
         Context.MODE_PRIVATE
     )
@@ -21,82 +17,70 @@ class TokenManager(context: Context) {
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_DOB = "user_dob"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
+
+        @Volatile
+        private var INSTANCE: TokenManager? = null
+
+        fun getInstance(context: Context): TokenManager {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: TokenManager(context.applicationContext).also { INSTANCE = it }
+            }
+        }
     }
 
-    /**
-     * Simpan token JWT setelah login/register
-     */
-    fun saveToken(token: String) {
-        prefs.edit().putString(KEY_TOKEN, token).apply()
-        prefs.edit().putBoolean(KEY_IS_LOGGED_IN, true).apply()
+    fun saveToken(token: String?) {
+        val editor = prefs.edit()
+        if (token.isNullOrEmpty()) {
+            editor.remove(KEY_TOKEN)
+            editor.putBoolean(KEY_IS_LOGGED_IN, false)
+            println("TokenManager: saveToken called with null/empty token -> cleared")
+        } else {
+            editor.putString(KEY_TOKEN, token)
+            editor.putBoolean(KEY_IS_LOGGED_IN, true)
+            val masked = if (token.length > 12) token.substring(0, 12) + "..." else token
+            println("TokenManager: saved token (masked): $masked")
+        }
+        editor.apply()
     }
 
-    /**
-     * Ambil token JWT untuk Authorization header
-     */
-    fun getToken(): String? {
-        return prefs.getString(KEY_TOKEN, null)
-    }
+    fun getToken(): String? = prefs.getString(KEY_TOKEN, null)
 
-    /**
-     * Simpan user ID
-     */
     fun saveUserId(userId: String) {
         prefs.edit().putString(KEY_USER_ID, userId).apply()
     }
 
-    /**
-     * Simpan user data setelah login/register
-     */
     fun saveUserData(id: String, name: String, email: String, dateOfBirth: String?) {
-        prefs.edit().apply {
-            putString(KEY_USER_ID, id)
-            putString(KEY_USER_NAME, name)
-            putString(KEY_USER_EMAIL, email)
-            putString(KEY_USER_DOB, dateOfBirth)
-            putBoolean(KEY_IS_LOGGED_IN, true)
-            apply()
-        }
+        val editor = prefs.edit()
+        editor.putString(KEY_USER_ID, id)
+        editor.putString(KEY_USER_NAME, name)
+        editor.putString(KEY_USER_EMAIL, email)
+        editor.putString(KEY_USER_DOB, dateOfBirth)
+        editor.putBoolean(KEY_IS_LOGGED_IN, true)
+        editor.apply()
     }
 
-    /**
-     * Ambil user ID
-     */
     fun getUserId(): String? = prefs.getString(KEY_USER_ID, null)
 
-    /**
-     * Ambil user name
-     */
     fun getUserName(): String? = prefs.getString(KEY_USER_NAME, null)
 
-    /**
-     * Ambil user email
-     */
     fun getUserEmail(): String? = prefs.getString(KEY_USER_EMAIL, null)
 
-    /**
-     * Ambil user date of birth
-     */
     fun getUserDateOfBirth(): String? = prefs.getString(KEY_USER_DOB, null)
 
-    /**
-     * Cek apakah user sudah login
-     */
     fun isLoggedIn(): Boolean {
         return prefs.getBoolean(KEY_IS_LOGGED_IN, false) && !getToken().isNullOrEmpty()
     }
 
-    /**
-     * Hapus token saat logout
-     */
     fun clearToken() {
-        prefs.edit().clear().apply()
+        val editor = prefs.edit()
+        editor.remove(KEY_TOKEN)
+        editor.putBoolean(KEY_IS_LOGGED_IN, false)
+        editor.apply()
+        println("TokenManager: clearToken called -> token removed")
     }
 
-    /**
-     * Hapus semua data saat logout
-     */
     fun clearAll() {
         prefs.edit().clear().apply()
+        println("TokenManager: clearAll called -> all prefs cleared")
     }
 }

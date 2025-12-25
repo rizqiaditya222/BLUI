@@ -10,9 +10,6 @@ import com.kotlin.blui.domain.model.Category
 class CategoryRepository(context: Context) {
     private val apiService: ApiService = ApiConfig.getApiService(context)
 
-    /**
-     * Get all categories for current user
-     */
     suspend fun getCategories(): Result<List<Category>> {
         return try {
             val response = apiService.getCategories()
@@ -25,9 +22,6 @@ class CategoryRepository(context: Context) {
         }
     }
 
-    /**
-     * Create new category
-     */
     suspend fun createCategory(
         name: String,
         icon: String,
@@ -40,7 +34,6 @@ class CategoryRepository(context: Context) {
                 color = color
             )
 
-            // Debug logging
             println("Create Category Request:")
             println("  name: $name")
             println("  icon: $icon")
@@ -55,9 +48,6 @@ class CategoryRepository(context: Context) {
         }
     }
 
-    /**
-     * Delete category by ID
-     */
     suspend fun deleteCategory(categoryId: String): Result<Unit> {
         return try {
             apiService.deleteCategory(categoryId)
@@ -69,7 +59,6 @@ class CategoryRepository(context: Context) {
         }
     }
 
-    // Extension function to convert CategoryResponse to Domain Model
     private fun CategoryResponse.toDomain(): Category {
         return Category(
             id = id,

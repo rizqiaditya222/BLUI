@@ -3,7 +3,7 @@ package com.kotlin.blui.data.api.response
 import com.google.gson.annotations.SerializedName
 
 data class AuthResponse(
-    val token: String,
+    val token: String?,
     val user: UserResponse
 )
 

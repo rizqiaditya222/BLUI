@@ -62,7 +62,7 @@ interface ApiService {
     suspend fun getTransactions(
         @Query("month") month: Int?,
         @Query("year") year: Int?,
-        @Query("date") date: String?, // Format: "YYYY-MM-DD" untuk filter tanggal spesifik
+        @Query("date") date: String?, // Format: "YYYY-MM-DD"
         @Query("startDate") startDate: String?, // Format: "YYYY-MM-DD"
         @Query("endDate") endDate: String? // Format: "YYYY-MM-DD"
     ): TransactionsListResponse

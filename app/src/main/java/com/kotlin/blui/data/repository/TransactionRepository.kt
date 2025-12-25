@@ -13,9 +13,6 @@ import com.kotlin.blui.domain.model.TransactionsByDate
 class TransactionRepository(context: Context) {
     private val apiService: ApiService = ApiConfig.getApiService(context)
 
-    /**
-     * Get all transactions with optional filters
-     */
     suspend fun getTransactions(
         month: Int? = null,
         year: Int? = null,
@@ -34,9 +31,6 @@ class TransactionRepository(context: Context) {
         }
     }
 
-    /**
-     * Get transactions grouped by date
-     */
     suspend fun getGroupedTransactions(
         month: Int? = null,
         year: Int? = null,
@@ -61,9 +55,6 @@ class TransactionRepository(context: Context) {
         }
     }
 
-    /**
-     * Get single transaction by ID
-     */
     suspend fun getTransactionById(id: String): Result<Transaction> {
         return try {
             println("Get Transaction By ID: $id")
@@ -76,9 +67,6 @@ class TransactionRepository(context: Context) {
         }
     }
 
-    /**
-     * Create new transaction
-     */
     suspend fun createTransaction(
         type: String,
         name: String,
@@ -114,9 +102,6 @@ class TransactionRepository(context: Context) {
         }
     }
 
-    /**
-     * Update existing transaction
-     */
     suspend fun updateTransaction(
         id: String,
         name: String,
@@ -142,9 +127,6 @@ class TransactionRepository(context: Context) {
         }
     }
 
-    /**
-     * Delete transaction by ID
-     */
     suspend fun deleteTransaction(transactionId: String): Result<Unit> {
         return try {
             apiService.deleteTransaction(transactionId)
@@ -156,9 +138,6 @@ class TransactionRepository(context: Context) {
         }
     }
 
-    /**
-     * Safe grouped transactions method with fallback to manual grouping when API returns 500 error
-     */
     suspend fun getGroupedTransactionsSafe(
         month: Int? = null,
         year: Int? = null
@@ -193,12 +172,10 @@ class TransactionRepository(context: Context) {
             println("getGroupedTransactionsSafe - Attempt 1 failed: ${e1.message}")
             e1.printStackTrace()
 
-            // Try second strategy using startDate & endDate derived from month/year if available
             if (month != null && year != null) {
                 try {
                     val cal = java.util.Calendar.getInstance().apply {
                         set(java.util.Calendar.YEAR, year)
-                        // Month param assumed 1-based
                         set(java.util.Calendar.MONTH, month - 1)
                         set(java.util.Calendar.DAY_OF_MONTH, 1)
                     }
@@ -225,7 +202,6 @@ class TransactionRepository(context: Context) {
                 }
             }
 
-            // Fallback: flat transactions then local grouping
             return try {
                 println("getGroupedTransactionsSafe - Attempt 3: fallback flat transactions + local grouping")
                 val flat = apiService.getTransactions(month, year, null, null, null)
@@ -239,7 +215,6 @@ class TransactionRepository(context: Context) {
         }
     }
 
-    // Extension function to convert TransactionResponse to Domain Model
     private fun TransactionResponse.toDomain(): Transaction {
         return Transaction(
             id = id,

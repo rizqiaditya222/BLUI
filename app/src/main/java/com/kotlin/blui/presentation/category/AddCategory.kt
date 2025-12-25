@@ -227,7 +227,6 @@ fun AddCategory(
                     )
                 }
 
-                // Show error message if any
                 uiState.errorMessage?.let { error ->
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(

@@ -52,7 +52,6 @@ fun BottomNavigationBar(
                 )
             )
 
-            // Placeholder for center FAB
             NavigationBarItem(
                 selected = false,
                 onClick = { },
@@ -60,7 +59,6 @@ fun BottomNavigationBar(
                 enabled = false
             )
 
-            // Profile
             NavigationBarItem(
                 selected = selectedItem == 2,
                 onClick = { onItemSelected(2) },

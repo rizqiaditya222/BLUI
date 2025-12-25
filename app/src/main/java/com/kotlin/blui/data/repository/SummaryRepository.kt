@@ -10,9 +10,6 @@ import com.kotlin.blui.domain.model.MonthlySummary
 class SummaryRepository(context: Context) {
     private val apiService: ApiService = ApiConfig.getApiService(context)
 
-    /**
-     * Get summary for a specific month and year
-     */
     suspend fun getSummary(month: Int, year: Int): Result<MonthlySummary> {
         return try {
             val response = apiService.getSummary(month, year)
@@ -24,9 +21,6 @@ class SummaryRepository(context: Context) {
         }
     }
 
-    /**
-     * Get summary history for multiple months
-     */
     suspend fun getSummaryHistory(
         startMonth: Int? = null,
         startYear: Int? = null,
@@ -44,7 +38,6 @@ class SummaryRepository(context: Context) {
         }
     }
 
-    // Extension function to convert BalanceSummaryResponse to Domain Model
     private fun BalanceSummaryResponse.toDomain(): MonthlySummary {
         return MonthlySummary(
             userId = userId,
@@ -58,7 +51,6 @@ class SummaryRepository(context: Context) {
         )
     }
 
-    // Extension function to convert CategorySummary response to Domain Model
     private fun CategorySummary.toDomain(): com.kotlin.blui.domain.model.CategorySummary {
         return com.kotlin.blui.domain.model.CategorySummary(
             categoryId = categoryId,

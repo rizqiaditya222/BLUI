@@ -6,7 +6,7 @@ data class TransactionResponse(
     @SerializedName("id")
     val id: String,
     @SerializedName("userId")
-    val userId: String, // ID user pemilik transaksi
+    val userId: String,
     @SerializedName("type")
     val type: String, // "income" or "expense"
     @SerializedName("name")
@@ -20,7 +20,7 @@ data class TransactionResponse(
     @SerializedName("note")
     val note: String?,
     @SerializedName("category")
-    val category: CategoryResponse? // Data kategori lengkap (nama, icon, warna)
+    val category: CategoryResponse?
 )
 
 data class TransactionsListResponse(
@@ -28,7 +28,6 @@ data class TransactionsListResponse(
     val transactions: List<TransactionResponse>
 )
 
-// Response untuk transaksi yang di-group berdasarkan tanggal
 data class TransactionsByDateResponse(
     @SerializedName("date")
     val date: String, // Format: "YYYY-MM-DD"
